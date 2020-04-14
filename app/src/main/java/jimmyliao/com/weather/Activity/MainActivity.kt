@@ -1,10 +1,12 @@
 package jimmyliao.com.weather.Activity
 
+import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.squareup.okhttp.*
@@ -25,10 +27,22 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        checkFirstTimeLaunch()
         receiveData()
-        recycler.layoutManager = LinearLayoutManager(this)
-        adapter = MainAdapter(this, weatherArr)
-        recycler.adapter = adapter
+        setRecyclerView()
+    }
+
+    private fun checkFirstTimeLaunch() {
+        val firstTimeKey = "isFirstTime"
+        val setting = getSharedPreferences("PREFERENCE", Context.MODE_PRIVATE)
+        val isFirstTime = setting.getBoolean(firstTimeKey, true)
+
+        if (isFirstTime) {
+            setting.edit().putBoolean(firstTimeKey, false).apply()
+            return
+        }
+
+        Toast.makeText(this,"歡迎回來",Toast.LENGTH_SHORT).show()
     }
 
     private fun receiveData() {
@@ -79,6 +93,12 @@ class MainActivity : AppCompatActivity() {
             }
 
         })
+    }
+
+    private fun setRecyclerView() {
+        recycler.layoutManager = LinearLayoutManager(this)
+        adapter = MainAdapter(this, weatherArr)
+        recycler.adapter = adapter
     }
 
     private fun isLoading() {
