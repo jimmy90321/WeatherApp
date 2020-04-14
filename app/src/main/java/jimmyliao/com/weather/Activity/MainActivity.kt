@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
+import android.view.View
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.squareup.okhttp.*
@@ -24,16 +25,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Log.d(TAG,weatherArr.toString())
         receiveData()
-        Log.d(TAG,weatherArr.toString())
         recycler.layoutManager = LinearLayoutManager(this)
         adapter = MainAdapter(this, weatherArr)
         recycler.adapter = adapter
     }
 
     private fun receiveData() {
-        Log.d(TAG,"start receive")
+        isLoading()
         val urlBuilder = HttpUrl.parse(Constant.baseUrl + Constant.optionID).newBuilder()
         urlBuilder.addQueryParameter(Constant.authorizationParam, Constant.authorizationValue)
         urlBuilder.addQueryParameter(Constant.locationParam, Constant.locationValue)
@@ -53,7 +52,10 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread {
                     if (resStr != null) {
                         val resObj = Gson().fromJson(resStr, JsonObject::class.java)
-                        val records = resObj.get("records").asJsonObject.get("location").asJsonArray[0].asJsonObject.get("weatherElement").asJsonArray[0].asJsonObject.get("time").asJsonArray
+                        val records =
+                            resObj.get("records").asJsonObject.get("location").asJsonArray[0].asJsonObject.get("weatherElement").asJsonArray[0].asJsonObject.get(
+                                "time"
+                            ).asJsonArray
                         records.forEachIndexed { index, it ->
                             val recordObj = it.asJsonObject
                             val parameter = recordObj.get("parameter").asJsonObject
@@ -69,11 +71,23 @@ class MainActivity : AppCompatActivity() {
                                 weatherArr.add(null)
                             }
                         }
+                        adapter.notifyDataSetChanged()
+                        Log.d(TAG, weatherArr.toString())
                     }
-                    Log.d(TAG,"finish receive")
+                    finishLoading()
                 }
             }
 
         })
+    }
+
+    private fun isLoading() {
+        bar_loading.visibility = View.VISIBLE
+        tv_loading.visibility = View.VISIBLE
+    }
+
+    private fun finishLoading() {
+        bar_loading.visibility = View.INVISIBLE
+        tv_loading.visibility = View.INVISIBLE
     }
 }
